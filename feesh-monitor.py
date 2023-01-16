@@ -1,3 +1,5 @@
+from sensors import *
+
 def main():
     print("Running initial setup...")
 
