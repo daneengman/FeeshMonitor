@@ -1,6 +1,7 @@
 # These could also each be their own file
 
 import random
+import datetime
 
 class Generic_sensor:
     def __init__(self):
@@ -29,7 +30,23 @@ class Test_sensor(Generic_sensor):
         return self.value
 
     def update_value(self) -> int:
-        return random.randint(0, 100)
+        self.value = random.randint(0, 100)
+        return self.get_value()
 
     def field_name(self):
         return f"Test value {self.name}"
+
+class Time_sensor(Generic_sensor):
+    def __init__(self, name=""):
+        self.name = name
+        self.update_value()
+
+    def get_value(self) -> str:
+        return self.value
+
+    def update_value(self) -> str:
+        self.value = datetime.datetime.now()
+        return self.get_value()
+
+    def field_name(self):
+        return f"Time"
