@@ -34,10 +34,12 @@ class Datalog:
             csvwriter.writerow(values)
             # add it to some other data structure?
 
+    # this could be improved
     def make_graph(self):
         """ some sort of basic graph \o.o/ """
         df = pd.read_csv(self.filename, index_col = 0, parse_dates = True) # boy isn't this efficient
         print(df)
 
-        df["Test value 0"].plot() # adjust to whatever plot you want to see
-        plt.show()
+        df["Temperature"].plot() # adjust to whatever plot you want to see
+        # plt.show()
+        plt.savefig('COOL_GRAPH.PNG')
