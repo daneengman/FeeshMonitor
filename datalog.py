@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from camera import *
+
 # The plan: create a csv file for every day, and log all that data into the 
 # csv file
 
@@ -43,3 +45,9 @@ class Datalog:
         df["Temperature"].plot() # adjust to whatever plot you want to see
         # plt.show()
         plt.savefig('COOL_GRAPH.PNG')
+
+    # this could be realistically moved to camera
+    def photo_folder_init(self):
+        date = datetime.datetime.now().date() # issues with timezone?
+        if not os.path.exists("logs"):
+            os.mkdir("logs")

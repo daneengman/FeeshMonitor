@@ -8,6 +8,10 @@ import os
 import glob
 import time
 
+# for camera
+from picamera import PiCamera
+import time
+
 class Generic_sensor:
     def __init__(self):
         """ Completes setup process for sensor """
@@ -58,15 +62,21 @@ class Time_sensor(Generic_sensor):
 
 class Temperature_sensor:
     def __init__(self):
-        """ Completes setup process for sensor """
-        os.system('modprobe w1-gpio')
-        os.system('modprobe w1-therm')
-        
-        self.base_dir = '/sys/bus/w1/devices/'
-        self.device_folder = glob.glob(self.base_dir + '28*')[0]
-        self.device_file = self.device_folder + '/w1_slave'
+        try:
+            """ Completes setup process for sensor """
+            os.system('modprobe w1-gpio')
+            os.system('modprobe w1-therm')
+            
+            self.base_dir = '/sys/bus/w1/devices/'
+            self.device_folder = glob.glob(self.base_dir + '28*')[0]
+            self.device_file = self.device_folder + '/w1_slave'
 
-        self.update_value()
+            self.enabled = True
+            self.update_value()
+        except:
+            print("Something is wrong with the temperature sensor.")
+            self.enabled = False
+            self.value = -1
 
     def read_temp_raw(self):
         f = open(self.device_file, 'r')
@@ -92,9 +102,51 @@ class Temperature_sensor:
 
     def update_value(self):
         """ Sets value to value read from sensor, and returns it """
-        self.value = self.read_temp()[0]
+        if self.enabled:
+            try:
+                self.value = self.read_temp()[0]
+            except:
+                print("Error with temperature sensor")
+                self.value = -1
+        
         return self.get_value()
 
     def field_name(self) -> str:
         """ Returns the name of the field, such as temperature """
         return "Temperature"
+
+class Generic_sensor:
+    def __init__(self):
+        """ Completes setup process for sensor """
+        pass
+
+    def get_value(self):
+        """ Returns last read value from sensor without reading it again """
+        pass
+
+    def update_value(self):
+        """ Sets value to value read from sensor, and returns it """
+        pass
+
+    def field_name(self) -> str:
+        """ Returns the name of the field, such as temperature """
+        pass
+
+camera = PiCamera()
+time.sleep(2)
+camera.resolution = (1280, 720)
+camera.vflip = True
+camera.contrast = 10
+
+#taking a picture
+camera.capture("/home/pi/Pictures/img.jpg")
+print("Took picture.")
+
+#taking a video
+file_name = "/home/pi/Pictures/video_" + str(time.time()) + ".h264"
+
+print("Start recording...")
+camera.start_recording(file_name)
+camera.wait_recording(5)
+camera.stop_recording()
+print("Finished recording.")
