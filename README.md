@@ -1,2 +1,2 @@
 # FeeshMonitor
-We would like to be able to test the temperature, ph, and co2 levels of an aquarium remotely. We would like to be able to control the temperature and CO2 levels. We will use a Raspberry Pi and i2c communication to display these parameters to a display. We will use Python programming language for coding.
+The goal for our project was to be able to test the temperature, ph, and co2 levels of an aquarium remotely as well as to adjust the temperature level remotely. We used a Raspberry Pi and GPIO pins/I2C communication to display these parameters to a display. In order to collect analog input and to produce analog signals, we will use serial communication between an Arduino and the Raspberry Pi. We used Python programming language to code the Raspberry Pi.
