@@ -14,84 +14,85 @@ try:
 except:
     print("Probably not running on a Pi")
 
+class Process_manager():
+    def __init__(self, function, args):
+        self.parent_pipe, self.child_pipe = multiprocessing.Pipe()
+        self.process = multiprocessing.Process(target=function, args=(args, self.child_pipe,))
+        self.process.start()
+
+        # wait for initialization
+        msg = self.parent_pipe.recv()
+        print(msg)
+
+    def send_msg(self, msg):
+        self.parent_pipe.send(msg)
+
+    def join(self):
+        self.process.join()
+
 def main():
     print("Starting up...")
     data_lock = multiprocessing.Lock()
-    parent_pipe_data, child_pipe_data = multiprocessing.Pipe()
-    data_collection_p = multiprocessing.Process(target=sensor_collection, args=(data_lock, child_pipe_data,))
-
-    data_collection_p.start()
-
-    # wait for sensors to initialize
-    msg = parent_pipe_data.recv()
-    print(msg)
-
-    
-    parent_pipe_graphing, child_pipe_graph = multiprocessing.Pipe()
-    graphing_p = multiprocessing.Process(target=graphing, args=(data_lock, child_pipe_graph,))
-
-    graphing_p.start()
-
-    # wait for graphing to initialize
-    msg = parent_pipe_graphing.recv()
-    print(msg)
+    processes = {}
+    processes["data_collection_manager"] = Process_manager(sensor_collection, data_lock)
+    processes["graphing_manager"] = Process_manager(graphing, data_lock)
+    processes["photographing_manager"] = Process_manager(photographing, data_lock)
 
 
     print("Running loop...")
     print("Press any key to end")
 
     msg = input()
-    parent_pipe_data.send(msg)
-    parent_pipe_graphing.send(msg)
-
-    data_collection_p.join()
-    graphing_p.join()
+    for process_manager in processes:
+        processes[process_manager].send_msg(msg)
+        processes[process_manager].join()
+    
     print("test finished")
     
 
-def sensor_collection(data_lock, child_pipe_data):
+def sensor_collection(data_lock, child_pipe):
     data_lock.acquire()
     print("Initializing sensors....")
     test_sensors = [Time_sensor(), Test_sensor()]
     datalog = Datalog(test_sensors, True)
     data_lock.release()
 
-    child_pipe_data.send("Sensor initialization finished")
+    child_pipe.send("Sensor initialization finished")
 
     while True:
         datalog.update_values()
         datalog.append_values(data_lock)
-        if child_pipe_data.poll(0.5):
+        if child_pipe.poll(0.5):
             print("Ending data collection")
             break
 
-    child_pipe_data.send("sensor_collection terminating")
+    child_pipe.send("sensor_collection terminating")
 
-def graphing(data_lock, child_pipe_graph):
+def graphing(data_lock, child_pipe):
     graphing_o = Graphing()
 
-    child_pipe_graph.send("Graphing initialization finished")
+    child_pipe.send("Graphing initialization finished")
 
     while True:
         graphing_o.make_graph(data_lock)
-        if child_pipe_graph.poll(5):
+        if child_pipe.poll(5):
             print("Ending graph output")
             break
 
-    child_pipe_graph.send("graphing terminating")
+    child_pipe.send("graphing terminating")
 
-# def photographing(data_lock, child_pipe_photo):
-#     camera_o = Camera()
+def photographing(data_lock, child_pipe):
+    camera_o = Camera()
 
-#     child_pipe_photo.send("Camera initialization finished")
+    child_pipe.send("Camera initialization finished")
 
-#     while True:
-#         graphing_o.make_graph(data_lock)
-#         if child_pipe_photo.poll(15):
-#             print("Ending graph output")
-#             break
+    while True:
+        camera_o.take_picture()
+        if child_pipe.poll(15):
+            print("Ending photo capture")
+            break
 
-#     child_pipe_photo.send("graphing terminating")
+    child_pipe.send("Photographing terminating")
 
 if __name__ == "__main__":
     main()
