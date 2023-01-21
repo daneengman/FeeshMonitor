@@ -40,9 +40,6 @@ while True:
     elif current > target + 1:
         print("turning off heater")
         ser.write(b"low\n")
-    try:
-        line = ser.readline().decode('utf-8')
-        print(line)
-    except:
-        print("whatever")
+    line = ser.readline().decode('utf-8')
+    print(line)
     time.sleep(1)

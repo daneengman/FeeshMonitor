@@ -205,6 +205,8 @@ def graphics(data_lock, queue, child_pipe):
     vertical_ratio = 6/9.6
     plot_size = width*(1-horizontal_ratio)-line_width/2, height*vertical_ratio-line_width/2
     # should this be in some redraw all function
+
+    
     
 
 
@@ -255,6 +257,32 @@ def draw_values(origin, width, height, values, screen, my_font):
         screen.blit(text_surface, this_origin)
         origin = (origin[0] + width/num_items, origin[1])
         # print(origin)
+
+import serial
+import time
+import os
+import glob
+
+def outputs(data_lock, queue, child_pipe):
+    print("Initializing the death box...")
+    ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+    ser.reset_input_buffer()
+    child_pipe.send("Graphics initialization finished")
+
+    
+
+    while True:
+        target = 72
+        
+        if current < target - 1:
+            print("turning on heater")
+            ser.write(b"high\n")
+        elif current > target + 1:
+            print("turning off heater")
+            ser.write(b"low\n")
+        line = ser.readline().decode('utf-8')
+        print(line)
+        time.sleep(1)
 
 if __name__ == "__main__":
     main()
