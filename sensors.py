@@ -8,6 +8,8 @@ import os
 import glob
 import time
 
+from math import *
+
 # # for camera
 # from picamera import PiCamera
 # import time
@@ -31,19 +33,23 @@ class Generic_sensor:
 
 
 class Test_sensor(Generic_sensor):
-    def __init__(self, name=0):
+    def __init__(self, name="0", log=False):
         self.value = 100
         self.name = name
+        self.log = log
 
-    def get_value(self) -> int:
+    def get_value(self):
         return self.value
 
-    def update_value(self) -> int:
-        self.value = random.randint(0, 100)
+    def update_value(self):
+        if not self.log:
+            self.value = random.randint(0, 100)
+        else:
+            self.value = int(e**(random.random() * log(600, e)))
         return self.get_value()
 
     def field_name(self):
-        return f"Test value {self.name}"
+        return f"{self.name} (tst)"
 
 class Time_sensor(Generic_sensor):
     def __init__(self, name=""):
@@ -51,7 +57,7 @@ class Time_sensor(Generic_sensor):
         self.update_value()
 
     def get_value(self) -> str:
-        return self.value
+        return str(self.value)
 
     def update_value(self) -> str:
         self.value = datetime.datetime.now()

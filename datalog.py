@@ -13,6 +13,10 @@ import matplotlib.pyplot as plt
 # The plan: create a csv file for every day, and log all that data into the 
 # csv file
 
+class frame:
+    pass
+
+
 class Datalog:
     def __init__(self, sensors, reset = False):
         self.sensors = sensors # lol is there a better way to do this
@@ -34,6 +38,9 @@ class Datalog:
 
     def update_values(self):
         self.values = [sensor.update_value() for sensor in self.sensors]
+        
+    def get_values(self):
+        return dict([(sensor.field_name(), sensor.get_value()) for sensor in self.sensors])
 
     def append_values(self, file_lock):
         file_lock.acquire()

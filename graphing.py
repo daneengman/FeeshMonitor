@@ -27,15 +27,21 @@ class Graphing():
         width,height = dims
         df = pd.read_csv(path, index_col = 0, parse_dates = True) # boy isn't this efficient
         # print(df)
-        
-        # px = 1/plt.rcParams['figure.dpi']  # pixel in inches
-        # df.plot(
-        #                 figsize = (dims[0]*px,dims[1]*px)) # adjust to whatever plot you want to see
-        # plt.legend(['A', 'B', 'C'], loc='upper left')
-        # # plt.show()
-        # # plt.title("hello!")
-        # plt.savefig(f'Graphs/Graph.PNG')
-        # plt.close()
+
+        px = 1/plt.rcParams['figure.dpi']  # pixel in inches
+        axs = df.plot(subplots = True,
+                        figsize = (dims[0]*px,dims[1]*px)) # adjust to whatever plot you want to see
+        # axs[0].set_yscale('log')
+        axs[0].legend(['Temperature'], loc='lower left')
+
+        axs[1].set_yscale('log')
+        axs[1].legend(['CO2'], loc='lower left')
+        # plt.show()
+        # plt.title("hello!")
+        data_lock.acquire()
+        plt.savefig(f'Graphs/Graph.PNG')
+        data_lock.release()
+        plt.close()
 
     def copy_csv(self):
         date = datetime.datetime.now().date() # issues with timezone?

@@ -118,7 +118,7 @@ def main():
         msg = queue.get()
         if type(msg) == Queue_message:
             # print("successfully received message")
-            processes[msg.destination.__name__].send_msg(msg.msg)
+            processes[msg.destination.__name__].send_msg(msg)
 
         if type(msg) == str:
             print(msg)
@@ -135,7 +135,7 @@ def main():
 def sensor_collection(data_lock, queue, child_pipe):
     data_lock.acquire()
     print("Initializing sensors....")
-    test_sensors = [Time_sensor(), Test_sensor(0), Test_sensor(1), Test_sensor(2)]
+    test_sensors = [Time_sensor(), Test_sensor("Temp"), Test_sensor("CO2", log = True)]
     datalog = Datalog(test_sensors, True)
     data_lock.release()
 
@@ -143,6 +143,8 @@ def sensor_collection(data_lock, queue, child_pipe):
 
     while True:
         datalog.update_values()
+        queue.put(Queue_message(sensor_collection, graphics, datalog.get_values()))
+        # queue.put(Queue_message(sensor_collection, graphics, values)) # TODO
         datalog.append_values(data_lock)
         if child_pipe.poll(0.5):
             print("Ending data collection")
@@ -194,15 +196,17 @@ def graphics(data_lock, queue, child_pipe):
     child_pipe.send("Graphics initialization finished")
 
     graph = [pygame.image.load(f"Graphs/{graph_path}") for graph_path in os.listdir("Graphs")][0]
-
+    values = {}
+    pygame.font.init()
+    my_font = pygame.font.SysFont('Comic Sans MS', 40)
     # screen
     line_width = 4
     horizontal_ratio = 5/16
     vertical_ratio = 6/9.6
     plot_size = width*(1-horizontal_ratio)-line_width/2, height*vertical_ratio-line_width/2
-    pygame.draw.line(screen, (0,0,0), (width*horizontal_ratio,0), (width*horizontal_ratio,height), width=line_width)
-    pygame.draw.line(screen, (0,0,0), (0,height*6/9.6), (width,height*6/9.6), width=line_width)
-    pygame.draw.line(screen, (0,0,0), (0,height*2.4/9.6), (width*horizontal_ratio,height*2.4/9.6), width=line_width)
+    # should this be in some redraw all function
+    
+
 
     while True:
         for event in pygame.event.get():
@@ -211,11 +215,46 @@ def graphics(data_lock, queue, child_pipe):
                 sys.exit()
         # screen.blit(graphs[0], (0, 0))
         if child_pipe.poll(0.1): # timing?  
-            child_pipe.recv()
-            # print([f"Graphs/{graph_path}" for graph_path in os.listdir("Graphs")]) debugging I guess
-            graph = [pygame.image.load(f"Graphs/{graph_path}") for graph_path in os.listdir("Graphs")][0]
+            msg = child_pipe.recv()
+            if msg.originator == graphing:
+                # print([f"Graphs/{graph_path}" for graph_path in os.listdir("Graphs")]) debugging I guess
+                data_lock.acquire()
+                graph = [pygame.image.load(f"Graphs/{graph_path}") for graph_path in os.listdir("Graphs")][0]
+                data_lock.release()
+            if msg.originator == sensor_collection:
+                values = msg.msg
+                # num_items = len(values)
+                # for key in values:
+                #     print(key, values[key])
+        screen.fill((255,255,255))
+        pygame.draw.line(screen, (0,0,0), (width*horizontal_ratio,0), (width*horizontal_ratio,height), width=line_width)
+        pygame.draw.line(screen, (0,0,0), (0,height*6/9.6), (width,height*6/9.6), width=line_width)
+        pygame.draw.line(screen, (0,0,0), (0,height*2.4/9.6), (width*horizontal_ratio,height*2.4/9.6), width=line_width)
+
+        origin = (horizontal_ratio * width + line_width/2, vertical_ratio * height + line_width/2)
+        draw_values(origin, width-origin[0], height-origin[1], values, screen, my_font)
+
         screen.blit(graph, (width*horizontal_ratio + line_width/2,0))
+
+
         pygame.display.update()
+
+def draw_values(origin, width, height, values, screen, my_font):
+    num_items = len(values)
+    for key in values:
+        if key == 'Time':
+            value = datetime.datetime.strptime(values[key], "%Y-%m-%d %H:%M:%S.%f").time().isoformat(timespec='seconds')
+        else:
+            value = values[key]
+        text_surface = my_font.render(f'{key}', False, (0, 0, 0))
+        this_origin = (origin[0] + (width/num_items)/10, origin[1] + height/10)
+        screen.blit(text_surface, this_origin)
+
+        text_surface = my_font.render(f'{value}', False, (0, 0, 0))
+        this_origin = (origin[0] + (width/num_items)/10, origin[1] + height/2)
+        screen.blit(text_surface, this_origin)
+        origin = (origin[0] + width/num_items, origin[1])
+        # print(origin)
 
 if __name__ == "__main__":
     main()
