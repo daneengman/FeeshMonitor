@@ -1,9 +1,21 @@
-from picamera import PiCamera
-import time
+enabled = True
 
-class camera:
+try:
+    from picamera import PiCamera
+except:
+    print("picamera unable to be imported")
+    enabled = False
+
+import datetime
+import os
+
+class Camera:
     def __init__(self):
-        pass
+        if not os.path.exists("Photos"):
+            os.mkdir("Photos")
+    
+    def get_filepath(self):
+        
 
     def take_picture(self, filepath):
         camera = PiCamera()

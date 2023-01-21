@@ -8,9 +8,9 @@ import os
 import glob
 import time
 
-# for camera
-from picamera import PiCamera
-import time
+# # for camera
+# from picamera import PiCamera
+# import time
 
 class Generic_sensor:
     def __init__(self):
@@ -114,39 +114,3 @@ class Temperature_sensor:
     def field_name(self) -> str:
         """ Returns the name of the field, such as temperature """
         return "Temperature"
-
-class Generic_sensor:
-    def __init__(self):
-        """ Completes setup process for sensor """
-        pass
-
-    def get_value(self):
-        """ Returns last read value from sensor without reading it again """
-        pass
-
-    def update_value(self):
-        """ Sets value to value read from sensor, and returns it """
-        pass
-
-    def field_name(self) -> str:
-        """ Returns the name of the field, such as temperature """
-        pass
-
-camera = PiCamera()
-time.sleep(2)
-camera.resolution = (1280, 720)
-camera.vflip = True
-camera.contrast = 10
-
-#taking a picture
-camera.capture("/home/pi/Pictures/img.jpg")
-print("Took picture.")
-
-#taking a video
-file_name = "/home/pi/Pictures/video_" + str(time.time()) + ".h264"
-
-print("Start recording...")
-camera.start_recording(file_name)
-camera.wait_recording(5)
-camera.stop_recording()
-print("Finished recording.")
