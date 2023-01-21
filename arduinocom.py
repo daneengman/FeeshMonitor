@@ -1,42 +1,48 @@
 import serial
 import time
+import os
+import glob
 
-def send():
-    ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-    ser.reset_input_buffer()
+os.system('modprobe w1-gpio')
+os.system('modprobe w1-therm')
+ 
+base_dir = '/sys/bus/w1/devices/'
+device_folder = glob.glob(base_dir + '28*')[0]
+device_file = device_folder + '/w1_slave'
 
-    while True:
-        #send data to arduino
-        ser.write(b"dane sucks\n")
-        try:
-            line = ser.readline().decode('utf-8')
-            print(line)
-        except:
-            print("whatever")
-        
-        time.sleep(1)
+def read_temp_raw():
+    f = open(device_file, 'r')
+    lines = f.readlines()
+    f.close()
+    return lines
 
-# import serial
+def read_temp_f():
+    lines = read_temp_raw()
+    while lines[0].strip()[-3:] != 'YES':
+        time.sleep(0.2)
+        lines = read_temp_raw()
+    equals_pos = lines[1].find('t=')
+    if equals_pos != -1:
+        temp_string = lines[1][equals_pos+2:]
+        temp_c = float(temp_string) / 1000.0
+        temp_f = temp_c * 9.0 / 5.0 + 32.0
+        return temp_f
 
-# if __name__ == 'main':
-#     ser = serial.Serial('/dev/tyyACM0', 9600, timeout=1)
-#     ser.reset_input_buffer()
-    
-#     while True:
-#         #send data to ardunio
-#         ser.write(b"hello from rasp pi\n")
-#         line = ser.readline().decode('utf-8').restrip()
-#         print(line)
-#         time.sleep(1)
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
+ser.reset_input_buffer()
 
-#         #get data from ardunino
-#         if ser.in_waiting > 0:
-#             line = ser.readline().decode('utf-8').rstrip()
-#             print(line)
-
-def main():
-    print("Hello world")
-    send()
-
-if __name__ == "__main__":
-    main()
+while True:
+    target = 72
+    current = read_temp_f()
+    if current < target - 1:
+        print("turning on heater")
+        ser.write(b"high\n")
+    elif current > target + 1:
+        print("turning off heater")
+        ser.write(b"low\n")
+    try:
+        line = ser.readline().decode('utf-8')
+        print(line)
+    except:
+        print("whatever")
+    time.sleep(1)
