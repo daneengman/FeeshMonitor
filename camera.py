@@ -12,6 +12,9 @@ import time
 
 class Camera:
     def __init__(self):
+        if not enabled:
+            return
+
         if not os.path.exists("Photos"):
             os.mkdir("Photos")
         
@@ -60,3 +63,6 @@ class Camera:
 # camera.wait_recording(5)
 # camera.stop_recording()
 # print("Finished recording.")
+
+def is_enabled():
+    return enabled

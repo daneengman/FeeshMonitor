@@ -17,20 +17,25 @@ class Graphing():
         if not os.path.exists("tmp/graphing"):
             os.mkdir("tmp/graphing")
         
-    def make_graph(self, data_lock):
+    def make_graph(self, data_lock, dims):
         data_lock.acquire()
         path = self.copy_csv()
         data_lock.release()
 
         # probably need a graph file lock too eventually
         """ some sort of basic graph \\o.o/ """
+        width,height = dims
         df = pd.read_csv(path, index_col = 0, parse_dates = True) # boy isn't this efficient
         # print(df)
-        column_headers = list(df.columns.values) 
-        for header in column_headers:
-            df[header].plot() # adjust to whatever plot you want to see
-            # plt.show()
-            plt.savefig(f'Graphs/{header} Graph.PNG')
+        
+        # px = 1/plt.rcParams['figure.dpi']  # pixel in inches
+        # df.plot(
+        #                 figsize = (dims[0]*px,dims[1]*px)) # adjust to whatever plot you want to see
+        # plt.legend(['A', 'B', 'C'], loc='upper left')
+        # # plt.show()
+        # # plt.title("hello!")
+        # plt.savefig(f'Graphs/Graph.PNG')
+        # plt.close()
 
     def copy_csv(self):
         date = datetime.datetime.now().date() # issues with timezone?
