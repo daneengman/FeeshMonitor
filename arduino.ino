@@ -27,12 +27,13 @@ void loop() {
     }
   }
 
-  //get ph
+  //get and calculate ph
   int adcValue = analogRead(A0);
   float pHVoltage = (float)adcValue * 5 / 1024;
   float pH = 2.8*pHVoltage;
   Serial.print("pH = "); Serial.println(pH, 3);
 
+  //calculate co2
   int dKH = 6; //CHANGE THIS BASED OFF MEASURED VALUE
   float CO2 = 12.839 * dKH * pow(10, (6.37 - pH));
   Serial.print("CO2 = "); Serial.println(CO2, 3);
