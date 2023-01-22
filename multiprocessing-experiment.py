@@ -137,7 +137,10 @@ def sensor_collection(data_lock, queue, child_pipe):
     print("Initializing sensors....")
     test_sensors = [Time_sensor(), Test_sensor("Temp"), Test_sensor("CO2", log = True)]
     datalog = Datalog(test_sensors, True)
+    datalog.update_values()
     data_lock.release()
+    while True:
+        continue
 
     child_pipe.send("Sensor initialization finished")
 
@@ -173,11 +176,18 @@ def graphing(data_lock, queue, child_pipe):
     child_pipe.send("graphing terminating")
 
 def photographing(data_lock, queue, child_pipe):
-    camera_o = Camera()
+    disabled = False
+    try:
+        camera_o = Camera()
+    except:
+        print("Camera did not work")
+        disabled = True
 
     child_pipe.send("Camera initialization finished")
 
     while True:
+        if disabled:
+            continue
         camera_o.take_picture()
         if child_pipe.poll(15):
             print("Ending photo capture")
@@ -189,7 +199,11 @@ def graphics(data_lock, queue, child_pipe):
     pygame.init()
     # screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
     if on_pi:
-        screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+        try:
+            os.environ["DISPLAY"] = ":0"
+            screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+        except:
+            screen = pygame.display.set_mode(dims)
     else:
         screen = pygame.display.set_mode(dims)
     screen.fill((255,255,255))
@@ -229,9 +243,9 @@ def graphics(data_lock, queue, child_pipe):
                 # for key in values:
                 #     print(key, values[key])
         screen.fill((255,255,255))
-        pygame.draw.line(screen, (0,0,0), (width*horizontal_ratio,0), (width*horizontal_ratio,height), width=line_width)
-        pygame.draw.line(screen, (0,0,0), (0,height*6/9.6), (width,height*6/9.6), width=line_width)
-        pygame.draw.line(screen, (0,0,0), (0,height*2.4/9.6), (width*horizontal_ratio,height*2.4/9.6), width=line_width)
+        pygame.draw.line(screen, (0,0,0), (width*horizontal_ratio,0), (width*horizontal_ratio,height), line_width)
+        pygame.draw.line(screen, (0,0,0), (0,height*6/9.6), (width,height*6/9.6), line_width)
+        pygame.draw.line(screen, (0,0,0), (0,height*2.4/9.6), (width*horizontal_ratio,height*2.4/9.6), line_width)
 
         origin = (horizontal_ratio * width + line_width/2, vertical_ratio * height + line_width/2)
         draw_values(origin, width-origin[0], height-origin[1], values, screen, my_font)
@@ -245,7 +259,8 @@ def draw_values(origin, width, height, values, screen, my_font):
     num_items = len(values)
     for key in values:
         if key == 'Time':
-            value = datetime.datetime.strptime(values[key], "%Y-%m-%d %H:%M:%S.%f").time().isoformat(timespec='seconds')
+            # value = datetime.datetime.strptime(values[key], "%Y-%m-%d %H:%M:%S.%f").time().isoformat(timespec='seconds')
+            value = datetime.datetime.now().time().isoformat(timespec='seconds')
         else:
             value = values[key]
         text_surface = my_font.render(f'{key}', False, (0, 0, 0))
@@ -268,8 +283,15 @@ def outputs(data_lock, queue, child_pipe):
     ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
     ser.reset_input_buffer()
     child_pipe.send("Graphics initialization finished")
-
-    
+   
+    msg = child_pipe.recv()
+    if msg.originator == graphing:
+        # print([f"Graphs/{graph_path}" for graph_path in os.listdir("Graphs")]) debugging I guess
+        data_lock.acquire()
+        graph = [pygame.image.load(f"Graphs/{graph_path}") for graph_path in os.listdir("Graphs")][0]
+        data_lock.release()
+    if msg.originator == sensor_collection:
+        values = msg.msg
 
     while True:
         target = 72

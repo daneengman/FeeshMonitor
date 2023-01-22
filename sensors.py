@@ -110,7 +110,7 @@ class Temperature_sensor:
         """ Sets value to value read from sensor, and returns it """
         if self.enabled:
             try:
-                self.value = self.read_temp()[0]
+                self.value = self.read_temp()[1]
             except:
                 print("Error with temperature sensor")
                 self.value = -1
@@ -119,4 +119,70 @@ class Temperature_sensor:
 
     def field_name(self) -> str:
         """ Returns the name of the field, such as temperature """
-        return "Temperature"
+        return "Temp"
+
+class Arduino_sensor_heater:
+    def __init__(self):
+        try:
+            """ Completes setup process for sensor """
+            os.system('modprobe w1-gpio')
+            os.system('modprobe w1-therm')
+            
+            self.base_dir = '/sys/bus/w1/devices/'
+            self.device_folder = glob.glob(self.base_dir + '28*')[0]
+            self.device_file = self.device_folder + '/w1_slave'
+
+            self.enabled = True
+            self.update_value()
+        except:
+            print("Something is wrong with the temperature sensor.")
+            self.enabled = False
+            self.value = -1
+
+    def get_value(self):
+        """ Returns last read value from sensor without reading it again """
+        return self.value
+
+    def update_value(self):
+        """ Sets value to value read from sensor, and returns it """
+        if self.enabled:
+            try:
+                self.value = -1
+            except:
+                print("Error with temperature sensor")
+                self.value = -1
+        
+        return self.get_value()
+
+    def field_name(self) -> str:
+        """ Returns the name of the field, such as temperature """
+        return "Heater"
+
+    def turn_off(self):
+        pass
+
+    def turn_on(self):
+        pass
+
+class Arduino_sensor_co2:
+    def __init__(self):
+        self.enabled = True
+
+    def get_value(self):
+        """ Returns last read value from sensor without reading it again """
+        return self.value
+
+    def update_value(self):
+        """ Sets value to value read from sensor, and returns it """
+        if self.enabled:
+            try:
+                self.value = -1
+            except:
+                print("Error with co2 sensor")
+                self.value = -1
+        
+        return self.get_value()
+
+    def field_name(self) -> str:
+        """ Returns the name of the field, such as temperature """
+        return "CO2"

@@ -21,7 +21,6 @@ class Camera:
         self.picam2 = Picamera2()
         self.picam2.start()
         time.sleep(2)
-        print("word")
     
     def get_filepath(self):
         date = datetime.datetime.now().date() # issues with timezone?

@@ -26,7 +26,6 @@ class Graphing():
         """ some sort of basic graph \\o.o/ """
         width,height = dims
         df = pd.read_csv(path, index_col = 0, parse_dates = True) # boy isn't this efficient
-        # print(df)
 
         px = 1/plt.rcParams['figure.dpi']  # pixel in inches
         axs = df.plot(subplots = True,
@@ -36,6 +35,7 @@ class Graphing():
 
         axs[1].set_yscale('log')
         axs[1].legend(['CO2'], loc='lower left')
+        axs[2].legend(['Heating'], loc='lower left')
         # plt.show()
         # plt.title("hello!")
         data_lock.acquire()
