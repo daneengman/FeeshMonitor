@@ -32,7 +32,7 @@ ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 ser.reset_input_buffer()
 
 while True:
-    target = 72
+    target = 40
     current = read_temp_f()
     if current < target - 1:
         print("turning on heater")

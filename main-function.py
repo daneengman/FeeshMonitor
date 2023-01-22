@@ -135,7 +135,7 @@ def sensor_collection(data_lock, queue, child_pipe):
     data_lock.acquire()
     print("Initializing sensors....")
     arduino_sensor_heater = Arduino_sensor_heater()
-    test_sensors = [Time_sensor(), Temperature_sensor(), Arduino_sensor_co2(), Arduino_sensor_heater()]
+    test_sensors = [Time_sensor(), Temperature_sensor(), Arduino_sensor_co2(arduino_sensor_heater), arduino_sensor_heater]
     datalog = Datalog(test_sensors, True)
     datalog.update_values()
     data_lock.release()
@@ -157,13 +157,15 @@ def sensor_collection(data_lock, queue, child_pipe):
         datalog.append_values(data_lock)
 
         temp = datalog.get_values()["Temp"]
-        if temp < target - range/2: arduino_sensor_heater.turn_on() # keep from rapidly cycling?
-        if temp > target + range/2: arduino_sensor_heater.turn_off()
+        # print(temp) # DEBUG
+        if temp < (target - range/2): arduino_sensor_heater.turn_on() # keep from rapidly cycling?
+        if temp > (target + range/2): arduino_sensor_heater.turn_off()
+        # print(arduino_sensor_heater.heating) # DEBUG
 
         if child_pipe.poll(0.5):
             print("Ending data collection")
             break
-        if queue.qsize() > 20:
+        if queue.qsize() > 10: # i wish it was easier than this
             break
 
     child_pipe.send("sensor_collection terminating")
@@ -276,6 +278,12 @@ def draw_values(origin, width, height, values, screen, my_font):
             value = datetime.datetime.now().time().isoformat(timespec='seconds')
         elif key == 'Temp':
             value = f"{float(str(values[key])[0:4])} deg F"
+        elif key == "CO2":
+            value = f"{float(str(values[key])[0:4])} ppm"
+        elif key == "Heater":
+            if values[key] == 1:
+                value = "On"
+            else: value = "Off"
         else:
             value = values[key]
         text_surface = my_font.render(f'{key}', False, (0, 0, 0))
@@ -287,39 +295,6 @@ def draw_values(origin, width, height, values, screen, my_font):
         screen.blit(text_surface, this_origin)
         origin = (origin[0] + width/num_items, origin[1])
         # print(origin)
-
-import serial
-import time
-import os
-import glob
-
-def outputs(data_lock, queue, child_pipe):
-    print("Initializing the death box...")
-    ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-    ser.reset_input_buffer()
-    child_pipe.send("Graphics initialization finished")
-   
-    msg = child_pipe.recv()
-    if msg.originator == graphing:
-        # print([f"Graphs/{graph_path}" for graph_path in os.listdir("Graphs")]) debugging I guess
-        data_lock.acquire()
-        graph = [pygame.image.load(f"Graphs/{graph_path}") for graph_path in os.listdir("Graphs")][0]
-        data_lock.release()
-    if msg.originator == sensor_collection:
-        values = msg.msg
-
-    while True:
-        target = 72
-        
-        if current < target - 1:
-            print("turning on heater")
-            ser.write(b"high\n")
-        elif current > target + 1:
-            print("turning off heater")
-            ser.write(b"low\n")
-        line = ser.readline().decode('utf-8')
-        print(line)
-        time.sleep(1)
 
 if __name__ == "__main__":
     main()

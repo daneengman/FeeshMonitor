@@ -1,0 +1,6 @@
+{
+    "port": "/dev/ttyACM0",
+    "board": "arduino:avr:uno",
+    "programmer": "arduino:arduinoisp",
+    "sketch": "Arduino Programs/pi com/ph_and_outlet/ph_and_outlet.ino"
+}
