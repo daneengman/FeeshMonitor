@@ -48,6 +48,7 @@ void loop() {
     Serial.print("CO2:"); Serial.println(CO2, 3);
     delay(100);
   }
+  Serial.flush(); // not executed yet
 
   
 }

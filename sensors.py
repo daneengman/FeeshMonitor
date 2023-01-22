@@ -74,6 +74,7 @@ class Time_sensor(Generic_sensor):
 
 class Temperature_sensor:
     def __init__(self):
+        self.value = -1
         try:
             """ Completes setup process for sensor """
             os.system('modprobe w1-gpio')
@@ -85,10 +86,9 @@ class Temperature_sensor:
 
             self.enabled = True
             self.update_value()
-        except:
-            print("Something is wrong with the temperature sensor.")
+        except Exception as e:
+            print("Temperature sensor startup failed, error: ", e)
             self.enabled = False
-            self.value = -1
 
     def read_temp_raw(self):
         f = open(self.device_file, 'r')
@@ -114,12 +114,13 @@ class Temperature_sensor:
 
     def update_value(self):
         """ Sets value to value read from sensor, and returns it """
+        prev = self.value
         if self.enabled:
             try:
                 self.value = self.read_temp()[1]
             except:
                 print("Error with temperature sensor")
-                self.value = -1
+                self.value = prev
         
         return self.get_value()
 
@@ -149,8 +150,10 @@ class Arduino_sensor_heater:
 
     def update_value(self):
         """ Sets value to value read from sensor, and returns it """
+        print("Arduino collection running...")
         if self.enabled:
             try:
+                self.ser.reset_input_buffer()
                 self.ser.write(b"begin message\n")
                 # print("self.heating ", self.heating) # DEBUG
                 if self.heating:
@@ -170,13 +173,20 @@ class Arduino_sensor_heater:
                             self.ser.write(b"high\n")
                         else:
                             self.ser.write(b"low\n")
+                prev = self.CO2
                 self.CO2 = response.split(":")[-1].splitlines()[0]
+                try:
+                    float(self.CO2)
+                except:
+                    self.CO2 = prev
+                    print("garbled data")
                 # print("CO2 ", self.CO2)
             except Exception as e:
                 print("Error with Arduino: ", e)
                 self.value = -1
         
         self.value = 1 if self.heating else 0
+        print("Arduino collection finished")
         return self.get_value()
 
     def field_name(self) -> str:

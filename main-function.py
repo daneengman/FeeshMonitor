@@ -136,7 +136,7 @@ def sensor_collection(data_lock, queue, child_pipe):
     print("Initializing sensors....")
     arduino_sensor_heater = Arduino_sensor_heater()
     test_sensors = [Time_sensor(), Temperature_sensor(), Arduino_sensor_co2(arduino_sensor_heater), arduino_sensor_heater]
-    datalog = Datalog(test_sensors, True)
+    datalog = Datalog(test_sensors, False)
     datalog.update_values()
     data_lock.release()
     datalog.append_values(data_lock)
@@ -148,7 +148,7 @@ def sensor_collection(data_lock, queue, child_pipe):
     child_pipe.send("Sensor initialization finished")
 
     target = 72 # this is so clunky
-    range = 1
+    range = 0.5
 
     while True:
         datalog.update_values()
@@ -158,8 +158,8 @@ def sensor_collection(data_lock, queue, child_pipe):
 
         temp = datalog.get_values()["Temp"]
         # print(temp) # DEBUG
-        if temp < (target - range/2): arduino_sensor_heater.turn_on() # keep from rapidly cycling?
-        if temp > (target + range/2): arduino_sensor_heater.turn_off()
+        if temp < (target - range): arduino_sensor_heater.turn_on() # keep from rapidly cycling?
+        if temp > target: arduino_sensor_heater.turn_off()
         # print(arduino_sensor_heater.heating) # DEBUG
 
         if child_pipe.poll(0.5):
@@ -225,6 +225,7 @@ def graphics(data_lock, queue, child_pipe):
     child_pipe.send("Graphics initialization finished")
 
     graph = [pygame.image.load(f"Graphs/{graph_path}") for graph_path in os.listdir("Graphs")][0]
+    feesh = pygame.image.load("Photos/Display/Feesh.jpg")
     values = {}
     pygame.font.init()
     my_font = pygame.font.SysFont('Comic Sans MS', 35)
@@ -233,6 +234,11 @@ def graphics(data_lock, queue, child_pipe):
     horizontal_ratio = 5/16
     vertical_ratio = 7/9.6
     plot_size = width*(1-horizontal_ratio)-line_width/2, height*vertical_ratio-line_width/2
+
+    image_line_vertical_ratio = 2.4/9.6
+    image_dims = (width*horizontal_ratio, height*vertical_ratio)
+    ratio = 
+    pygame.transform.scale_by(feesh, (image_dims)
     # should this be in some redraw all function
 
     
@@ -295,6 +301,7 @@ def draw_values(origin, width, height, values, screen, my_font):
         screen.blit(text_surface, this_origin)
         origin = (origin[0] + width/num_items, origin[1])
         # print(origin)
+
 
 if __name__ == "__main__":
     main()
