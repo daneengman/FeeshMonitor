@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <math.h>
 
 void setup() {
   Serial.begin(9600);
@@ -28,9 +29,13 @@ void loop() {
 
   //get ph
   int adcValue = analogRead(A0);
-  float phVoltage = (float)adcValue * 5 / 1024;
-  float ph = 2.8*phVoltage;
-  Serial.print("pH = "); Serial.println(ph, 3);
+  float pHVoltage = (float)adcValue * 5 / 1024;
+  float pH = 2.8*pHVoltage;
+  Serial.print("pH = "); Serial.println(pH, 3);
+
+  int dKH = 6; //CHANGE THIS BASED OFF MEASURED VALUE
+  float CO2 = 12.839 * dKH * pow(10, (6.37 - pH));
+  Serial.print("CO2 = "); Serial.println(CO2, 3);
 
   delay(1000);
 }
