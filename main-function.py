@@ -236,9 +236,13 @@ def graphics(data_lock, queue, child_pipe):
     plot_size = width*(1-horizontal_ratio)-line_width/2, height*vertical_ratio-line_width/2
 
     image_line_vertical_ratio = 2.4/9.6
-    image_dims = (width*horizontal_ratio, height*vertical_ratio)
-    ratio = 
-    pygame.transform.scale_by(feesh, (image_dims)
+    image_dims = (int(width*horizontal_ratio), int(height*image_line_vertical_ratio))
+    ratio = image_dims[0]/feesh.get_size()[0]
+    og_dims = feesh.get_size()
+    feesh = pygame.transform.scale(feesh, (int(og_dims[0]*ratio), int(og_dims[1]*ratio)))
+
+    cropped_feesh = pygame.Surface(image_dims)
+    cropped_feesh.blit(feesh, (0, 0))
     # should this be in some redraw all function
 
     
@@ -272,6 +276,7 @@ def graphics(data_lock, queue, child_pipe):
         draw_values(origin, width-origin[0], height-origin[1], values, screen, my_font)
 
         screen.blit(graph, (width*horizontal_ratio + line_width/2,0))
+        screen.blit(cropped_feesh, (0,0))
 
 
         pygame.display.update()
