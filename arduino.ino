@@ -27,7 +27,7 @@ void loop() {
   }
 
   //get ph
-  int adcValue = analogRead(adcPin);
+  int adcValue = analogRead(A0);
   float phVoltage = (float)adcValue * 5 / 1024;
   float ph = 2.8*phVoltage;
   Serial.print("pH = "); Serial.println(ph, 3);
