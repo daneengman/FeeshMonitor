@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 void setup() {
   Serial.begin(9600);
   pinMode(4, OUTPUT);
@@ -22,6 +24,13 @@ void loop() {
       digitalWrite(4, LOW);
       digitalWrite(5, LOW);
     }
-    delay(1000)
   }
+
+  //get ph
+  int adcValue = analogRead(adcPin);
+  float phVoltage = (float)adcValue * 5 / 1024;
+  float ph = 2.8*phVoltage;
+  Serial.print("pH = "); Serial.println(ph, 3);
+
+  delay(1000);
 }
